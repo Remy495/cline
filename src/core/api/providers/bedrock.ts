@@ -10,6 +10,7 @@ import {
 } from "@aws-sdk/client-bedrock-runtime"
 import { fromNodeProviderChain } from "@aws-sdk/credential-providers"
 import { BedrockModelId, bedrockDefaultModelId, bedrockModels, CLAUDE_SONNET_1M_SUFFIX, ModelInfo } from "@shared/api"
+import { NodeHttp2Handler, NodeHttpHandler } from "@smithy/node-http-handler"
 import { calculateApiCostOpenAI } from "@utils/cost"
 import { ApiHandler, CommonApiHandlerOptions } from "../"
 import { withRetry } from "../retry"
@@ -29,6 +30,7 @@ export interface AwsBedrockHandlerOptions extends CommonApiHandlerOptions {
 	awsUseProfile?: boolean
 	awsProfile?: string
 	awsBedrockEndpoint?: string
+	awsBedrockUseHttp2?: boolean
 	awsBedrockCustomSelected?: boolean
 	awsBedrockCustomModelBaseId?: string
 	thinkingBudgetTokens?: number
@@ -258,10 +260,15 @@ export class AwsBedrockHandler implements ApiHandler {
 				},
 			}
 		}
+		const requestHandler =
+			this.options.awsBedrockUseHttp2 === false
+				? new NodeHttpHandler({})
+				: NodeHttp2Handler.create({ disableConcurrentStreams: true })
 		return new BedrockRuntimeClient({
 			region: this.getRegion(),
 			...auth,
 			...(this.options.awsBedrockEndpoint && { endpoint: this.options.awsBedrockEndpoint }),
+			requestHandler,
 		})
 	}
 
@@ -880,8 +887,20 @@ export class AwsBedrockHandler implements ApiHandler {
 				const base64Data = item.source.data.replace(/^data:image\/\w+;base64,/, "")
 				imageData = new Uint8Array(Buffer.from(base64Data, "base64"))
 			} else if (item.source.data && typeof item.source.data === "object") {
-				// Try to convert to Uint8Array
-				imageData = new Uint8Array(Buffer.from(item.source.data as Buffer | Uint8Array))
+				// Try to convert to Uint8Array without invoking Buffer.from on a union type
+				const dataObj: any = item.source.data
+				if (dataObj instanceof Uint8Array) {
+					imageData = new Uint8Array(dataObj)
+				} else if (dataObj?.buffer instanceof ArrayBuffer) {
+					// Covers cases like Node Buffer (which is a Uint8Array) or other typed arrays
+					imageData = new Uint8Array(
+						dataObj.buffer,
+						dataObj.byteOffset || 0,
+						dataObj.byteLength || dataObj.length || undefined,
+					)
+				} else {
+					throw new Error("Unsupported image data format")
+				}
 			} else {
 				throw new Error("Unsupported image data format")
 			}

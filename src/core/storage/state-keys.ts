@@ -51,6 +51,7 @@ export interface Settings {
 	awsBedrockEndpoint: string | undefined
 	awsProfile: string | undefined
 	awsAuthentication: string | undefined
+	awsBedrockUseHttp2: boolean | undefined
 	awsUseProfile: boolean | undefined
 	vertexProjectId: string | undefined
 	vertexRegion: string | undefined

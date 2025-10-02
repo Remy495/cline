@@ -178,6 +178,25 @@ export const BedrockProvider = ({ showModelOptions, isPopup, currentMode }: Bedr
 						Use prompt caching
 					</VSCodeCheckbox>
 				)}
+
+				<VSCodeCheckbox
+					checked={apiConfiguration?.awsBedrockUseHttp2 === false}
+					onChange={(e: any) => {
+						const isChecked = e.target.checked === true
+						// checked => Force HTTP/1.1 (set flag to false); unchecked => HTTP/2 (set flag to true)
+						handleFieldChange("awsBedrockUseHttp2", isChecked ? false : true)
+					}}>
+					Force HTTP/1.1
+				</VSCodeCheckbox>
+				<p
+					style={{
+						fontSize: "12px",
+						marginTop: "5px",
+						color: "var(--vscode-descriptionForeground)",
+					}}>
+					If your proxy or custom VPC endpoint does not support HTTP/2 (ALPN), enable "Force HTTP/1.1" to prevent TLS
+					handshake errors such as "TLSV1_ALERT_NO_APPLICATION_PROTOCOL".
+				</p>
 			</div>
 
 			<p

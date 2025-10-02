@@ -106,6 +106,7 @@ function createHandlerForProvider(
 				awsUseProfile: options.awsUseProfile,
 				awsProfile: options.awsProfile,
 				awsBedrockEndpoint: options.awsBedrockEndpoint,
+				awsBedrockUseHttp2: options.awsBedrockUseHttp2,
 				awsBedrockCustomSelected:
 					mode === "plan" ? options.planModeAwsBedrockCustomSelected : options.actModeAwsBedrockCustomSelected,
 				awsBedrockCustomModelBaseId:
