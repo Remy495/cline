@@ -1,6 +1,7 @@
 import type { Anthropic } from "@anthropic-ai/sdk"
 import { type ModelInfo, openAiModelInfoSaneDefaults } from "@shared/api"
 import OpenAI from "openai"
+import type { ChatCompletionReasoningEffort } from "openai/resources/chat/completions"
 import type { ApiHandler, CommonApiHandlerOptions } from "../"
 import { withRetry } from "../retry"
 import { convertToOpenAiMessages } from "../transform/openai-format"
@@ -10,6 +11,7 @@ interface LmStudioHandlerOptions extends CommonApiHandlerOptions {
 	lmStudioBaseUrl?: string
 	lmStudioModelId?: string
 	lmStudioMaxTokens?: string
+	reasoningEffort?: string
 }
 
 export class LmStudioHandler implements ApiHandler {
@@ -43,13 +45,20 @@ export class LmStudioHandler implements ApiHandler {
 			...convertToOpenAiMessages(messages),
 		]
 
+		const selectedModelId = this.getModel().id
+		const shouldAttachReasoning = selectedModelId.toLowerCase().includes("gpt-oss")
+		const reasoningEffort: ChatCompletionReasoningEffort | undefined = shouldAttachReasoning
+			? (this.options.reasoningEffort as ChatCompletionReasoningEffort) || "medium"
+			: undefined
+
 		try {
 			const stream = await client.chat.completions.create({
-				model: this.getModel().id,
+				model: selectedModelId,
 				messages: openAiMessages,
 				stream: true,
 				stream_options: { include_usage: true },
 				max_completion_tokens: this.options.lmStudioMaxTokens ? Number(this.options.lmStudioMaxTokens) : undefined,
+				reasoning_effort: reasoningEffort,
 			})
 			for await (const chunk of stream) {
 				const choice = chunk.choices[0]

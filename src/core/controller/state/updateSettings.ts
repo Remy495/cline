@@ -123,6 +123,25 @@ export async function updateSettings(controller: Controller, request: UpdateSett
 			}
 
 			controller.stateManager.setGlobalState("openaiReasoningEffort", reasoningEffort)
+
+			// Rebuild the current task's API handler so providers that consume reasoningEffort (e.g. OpenAI, LM Studio GPT-OSS)
+			// pick up the updated value immediately without requiring a new task.
+			if (controller.task) {
+				const currentMode = controller.stateManager.getGlobalSettingsKey("mode")
+				const apiConfigForHandler = {
+					...controller.stateManager.getApiConfiguration(),
+					ulid: controller.task.ulid,
+				} as any
+
+				// Inject mode-specific reasoningEffort into effective configuration
+				if (currentMode === "plan") {
+					apiConfigForHandler.planModeReasoningEffort = reasoningEffort
+				} else {
+					apiConfigForHandler.actModeReasoningEffort = reasoningEffort
+				}
+
+				controller.task.api = buildApiHandler(apiConfigForHandler, currentMode)
+			}
 		}
 
 		if (request.preferredLanguage !== undefined) {
