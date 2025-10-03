@@ -163,6 +163,7 @@ export async function readGlobalStateFromDisk(context: ExtensionContext): Promis
 		const awsProfile = context.globalState.get<GlobalStateAndSettings["awsProfile"]>("awsProfile")
 		const awsUseProfile = context.globalState.get<GlobalStateAndSettings["awsUseProfile"]>("awsUseProfile")
 		const awsAuthentication = context.globalState.get<GlobalStateAndSettings["awsAuthentication"]>("awsAuthentication")
+		const awsBedrockUseHttp2 = context.globalState.get<GlobalStateAndSettings["awsBedrockUseHttp2"]>("awsBedrockUseHttp2")
 		const vertexProjectId = context.globalState.get<GlobalStateAndSettings["vertexProjectId"]>("vertexProjectId")
 		const vertexRegion = context.globalState.get<GlobalStateAndSettings["vertexRegion"]>("vertexRegion")
 		const openAiBaseUrl = context.globalState.get<GlobalStateAndSettings["openAiBaseUrl"]>("openAiBaseUrl")
@@ -427,6 +428,7 @@ export async function readGlobalStateFromDisk(context: ExtensionContext): Promis
 			awsProfile,
 			awsUseProfile,
 			awsAuthentication,
+			awsBedrockUseHttp2,
 			vertexProjectId,
 			vertexRegion,
 			openAiBaseUrl,

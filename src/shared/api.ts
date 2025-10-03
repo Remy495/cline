@@ -92,6 +92,7 @@ export interface ApiHandlerOptions {
 	awsUseProfile?: boolean
 	awsProfile?: string
 	awsBedrockEndpoint?: string
+	awsBedrockUseHttp2?: boolean // default true; when false, force HTTP/1.1
 	claudeCodePath?: string
 	vertexProjectId?: string
 	vertexRegion?: string
